@@ -1,8 +1,6 @@
 package com.hjx.service;
 
-import com.hjx.spring.Autowired;
-import com.hjx.spring.Comonent;
-import com.hjx.spring.Scope;
+import com.hjx.spring.*;
 
 /**
  * @author hjx
@@ -10,14 +8,27 @@ import com.hjx.spring.Scope;
  */
 @Comonent()
 @Scope()
-public class UserService {
+public class UserService implements BeanNameAware, InitializingBean {
 
     //依赖注入
     @Autowired
-    private orderService orderService;
+    private OrderService orderService;
+    //beanName
+    private String beanName;
 
     public void test(){
         System.out.println(orderService);
     }
 
+
+    @Override
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        //todo 给对象赋值 todosomething 初始化方法
+
+    }
 }

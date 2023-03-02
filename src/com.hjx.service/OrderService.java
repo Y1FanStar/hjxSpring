@@ -7,5 +7,5 @@ import com.hjx.spring.Comonent;
  * @date 2023/1/15 17:06
  */
 @Comonent
-public class orderService {
+public class OrderService {
 }

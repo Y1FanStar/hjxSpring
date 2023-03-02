@@ -7,6 +7,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,6 +21,7 @@ public class HjxSpringApplicationContext {
 
     private ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
 
+    private ArrayList<BeanPostProcessor> beanPostProcessorArrayList = new ArrayList<>();
     public HjxSpringApplicationContext(Class configClass) {
         this.configClass = configClass;
         //扫描bean 如果加上了compent注解 判断bean是否为单例 是则在spring容器启动的时候就把这个bean添加到map中去
@@ -43,6 +45,12 @@ public class HjxSpringApplicationContext {
                             Class<?> clazz = classLoader.loadClass(className);
                             //代表是用户定义的bean
                             if (clazz.isAnnotationPresent(Comonent.class)) {
+                                // isAssignableFrom 判断class文件是否有继承某某接口
+                                // clazz instanceof 判断java类的方式
+                                if (BeanPostProcessor.class.isAssignableFrom(clazz)){
+                                    BeanPostProcessor instance = (BeanPostProcessor)clazz.newInstance();
+                                    beanPostProcessorArrayList.add(instance);
+                                }
                                 Comonent comonent = clazz.getAnnotation(Comonent.class);
                                 String beanName = comonent.value();
                                 //没有注解名称的时候
@@ -65,6 +73,10 @@ public class HjxSpringApplicationContext {
                             }
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
+                        } catch (InstantiationException e) {
+                            throw new RuntimeException(e);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
                         }
                     }
                 }
@@ -103,6 +115,21 @@ public class HjxSpringApplicationContext {
                     f.set(instance, getBean(f.getName()));
                 }
             }
+            // 判断对象是否有实现beanName接口 aware回调实现
+            if(instance instanceof BeanNameAware){
+                ((BeanNameAware) instance).setBeanName(beanName);
+            }
+            // 扫描的时候就会调用方法
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
+                beanPostProcessor.postProcessBeforeInitialization(beanName,instance);
+                beanPostProcessor.postProcessAfterInitialization(beanName,instance);
+            }
+            // 初始化 做一些事情
+            if(instance instanceof InitializingBean){
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
+            // 初始化后进行 AOP
+            // BeanPostProcessor bean的后置处理
 
             return instance;
         } catch (InstantiationException e) {
