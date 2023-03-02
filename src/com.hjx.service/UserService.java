@@ -8,7 +8,7 @@ import com.hjx.spring.*;
  */
 @Comonent()
 @Scope()
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserService implements UserInterface,BeanNameAware, InitializingBean {
 
     //依赖注入
     @Autowired
@@ -31,4 +31,6 @@ public class UserService implements BeanNameAware, InitializingBean {
         //todo 给对象赋值 todosomething 初始化方法
 
     }
+
+
 }
